@@ -1,4 +1,8 @@
-   ;Offset   Size   Description
+   
+   ; assembles directly to .SNA snapshot using the zeus assembler
+   ; https://en.wikipedia.org/wiki/Zeus_Assembler
+
+   ; Offset   Size   Description
    ;------------------------------------------------------------------------
    ;0        1      byte   I
    ;1        8      word   HL',DE',BC',AF'
