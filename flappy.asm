@@ -672,12 +672,12 @@ Frames              defw flappy0
                     defw flappy1
                     defw flappy2
 
-Offset              defw $0
-Ypos                defw $4000
-Yvel                defw $0
-Xpos                defw NumCols/2
-SprPtr              defw flappy0
-FrameIndex          db 0
+Offset              defw $0                       ; current "view" offset into the tilemap
+Ypos                defw $4000                    ; position of flappy in 8.8 fixed point
+Yvel                defw $0                       ; vertical velocity of flappy in 8.8 fixed point
+Xpos                defw NumCols/2                ; offset of flappy in cells from view
+SprPtr              defw flappy0                  ; sprite image to use for flappy
+FrameIndex          db   $0                       ; current animation frame
 
 NEXTCELL            macro()
                     ld a, c
@@ -809,7 +809,7 @@ UpdateDisplayList   ld (StackSave2+1), sp
                     exx
                     ld hl, DisplayList+4
                     ld e, NumRows
-l0                  loop NumCols
+UpdateDisplayList0  loop NumCols
                         TILE()
                     lend
                     ld l, 4
@@ -820,7 +820,7 @@ l0                  loop NumCols
                     ld sp, hl
                     exx 
                     dec e
-                    jp nz l0
+                    jp nz UpdateDisplayList0
                     exx
 StackSave2          ld sp, $0000
                     ret
@@ -879,10 +879,10 @@ AbsHL               ld a,h
                     call NegHL
                     ret 
 
-Gravity             equ  16
-TerminalVelocity    equ  2
-Thrust              equ  512
-MaxQ                equ  4
+Gravity             equ  16                  ; gravity 1/256 of a pixel
+TerminalVelocity    equ  2                   ; terminal velocity in pixels
+Thrust              equ  512                 ; thrust in 1/256 of a pixel
+MaxQ                equ  4                   ; maximum upward velocity in pixels
 
 Physics             ld de, (Yvel)
                     ld hl, (Ypos)
@@ -1011,7 +1011,7 @@ Colours             db $68, $68 , $68 ,$68 , $68, $68, $68, $68
 
 SetAttributes       ld hl, $5800 + ColOffset + 32 * RowOffset
                     ld ix, Colours
-                    ld b, NumRows + 1
+                    ld b, NumRows + 1             ; DANGER! This will scribble if NumRows > 23
 SetAttributes0      push bc
                     ld a, (ix+0)
                     ld ( hl ), a
@@ -1073,7 +1073,7 @@ ScrollVista         ld b,8
                     ld a, 0
                     rla 
                     ex de,hl
-                     or (hl)
+                    or (hl)
                     ld (hl),a
                     ex de,hl
                     djnz ScrollVista0
@@ -1103,9 +1103,6 @@ PushScroller        ld (ss0+1), sp
                     lend
 ss0                 ld sp, 0 
                     ret
-
-
-
 
 Reset               call ClearScreen
                     call SetAttributes
