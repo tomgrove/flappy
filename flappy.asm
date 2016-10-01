@@ -37,7 +37,6 @@ TileMapWidth        equ 128
       
 EntryPoint          jp Main
 
-TileMapPtr          defw  $0000
 
 SCRADD              macro(X)
                         Value =$4000 + (((X)/8 ) << 11) + (  (X) mod 8 ) * 32 + ColOffset
@@ -49,7 +48,7 @@ ATTRADD             macro(X)
                          defw Value
                     mend
 
-FILL                macro()
+MAKEDL              macro()
                     Row = 0
                     repeat 
                         align 256
@@ -66,26 +65,16 @@ FILL                macro()
                     defw StackSave
                     mend
 
-MOTION              macro()
-                    t = 0
-                    repeat
-                        defw cos( t / 255.0 * 3.1412 * 2.0 ) * (NumRows-4)/2 * 8 + (NumRows-3)/2 * 8 + 8
-                        t = t + 1
-                    until t > 255
-                    mend
-                    align 256
-
-DisplayList         FILL()
-
-
-
-SHTILE              macro()
+EXPTILE             macro()
                     loop 64 
                         db $00
                     lend
                     mend
 
-mottable            MOTION()
+                    align 256
+
+DisplayList         MAKEDL()
+
 
                     align 8
 
@@ -201,7 +190,7 @@ flappy2             db 0
                     db 0 
                     db 0,0,0,0, 0,0,0,0
                     
-Src0                dg _XXXXXXX
+Stem0                dg _XXXXXXX
                     dg XXX_X___
                     dg XX_X_X__
                     dg XXX_X___
@@ -210,7 +199,7 @@ Src0                dg _XXXXXXX
                     dg XX_X_X__
                     dg XXX_X___
                     
-Src1                dg XXXXX_X_
+Stem1                dg XXXXX_X_
                     dg __X_X_X_
                     dg _X_X_X_X
                     dg __X_X_X_
@@ -219,7 +208,7 @@ Src1                dg XXXXX_X_
                     dg _X_X_X_X
                     dg __X_X_X_
 
-Src2                dg ___XX___
+Stem2                dg ___XX___
                     dg __XXXX__
                     dg __XXXX__
                     dg __XXXX__
@@ -304,54 +293,53 @@ BlankMask           dg XXXXXXXX
                          
                     align 256
 
-T0                  SHTILE()
-T1                  SHTILE()
-T2                  SHTILE()
-T3                  SHTILE()
-T4                  SHTILE()
-T5                  SHTILE()
-T6                  SHTILE()
-T7                  SHTILE()
-T8                  SHTILE()
-T9                  SHTILE()
-T10                 SHTILE()
-T11                 SHTILE()
-T12                 SHTILE()
-
-T13                 SHTILE()
-T14                 SHTILE()
-T15                 SHTILE()
-T16                 SHTILE()
+eStem0              EXPTILE()
+eStem1              EXPTILE()
+eStem2              EXPTILE()
+eStem3              EXPTILE()
+eCap0               EXPTILE()
+eCap1               EXPTILE()
+eCap2               EXPTILE()
+eCap3               EXPTILE()
+eMask0              EXPTILE()
+eMask1              EXPTILE()
+eMask2              EXPTILE()
+eMask3              EXPTILE()
+eMasked0            EXPTILE()
+eMasked1            EXPTILE()
+eMasked2            EXPTILE()
+eMasked3            EXPTILE()
+eBlank              EXPTILE()
                
 
 
 MT0                 defw VRepeat
-                    defw T0
+                    defw eStem0
 MT1                 defw VRepeat
-                    defw T1
+                    defw eStem1
 MT2                 defw VRepeat
-                    defw T2
+                    defw eStem2
 MT3                 defw BlankCell
-                    defw T3
+                    defw eBlank
 MT4                 defw VRepeat
-                    defw T4
+                    defw eStem3
 MT5                 defw OneCell
-                    defw T5
+                    defw eCap0
 MT6                 defw OneCell
-                    defw T6
+                    defw eCap1
 MT7                 defw OneCell
-                    defw T7
+                    defw eCap2
 MT8                 defw OneCell
-                    defw T8
+                    defw eCap3
                     
 MT9                 defw VRepeatMask
-                    defw T13
+                    defw eMasked0
 MT10                defw VRepeatMask
-                    defw T14
+                    defw eMasked1
 MT11                defw VRepeatMask
-                    defw T15    
+                    defw eMasked2
 MT12                defw VRepeatMask
-                    defw T16
+                    defw eMasked3
                   
                     align 8
 
@@ -359,7 +347,7 @@ TILEMAP             macro()
                     loop NumRows
                         loop TileMapWidth
                             defw BlankCell
-                            defw T3
+                            defw eBlank
                         lend
                     lend
                     mend
@@ -639,34 +627,34 @@ l9                  ret
 
                     align 256
 
-Pipes               db 2,  18
-                    db 4,  30
-                    db 7, 42
-                    db 9, 54
-                    db 9, 66
-                    db 6, 74
-                    db 4, 82
-                    db 2, 90
+Pipes               db 2,     18
+                    db 4,     30
+                    db 7,     42
+                    db 9,     54
+                    db 9,     66
+                    db 6,     74
+                    db 4,     82
+                    db 2,     90
                     db $ff
                     
 
-MakeTiles           MAKETILE( Blank,  Src0, T0 )
-                    MAKETILE( Src0,  Src1, T1 )
-                    MAKETILE( Src1,  Src2, T2 )
-                    MAKETILE( Src2,  Blank, T4 )
-                    MAKETILE( Blank, Blank, T3 )
-                    MAKETILE( Blank,  Cap0, T5 )
-                    MAKETILE( Cap0,  Cap1, T6 )
-                    MAKETILE( Cap1,  Cap2, T7 )
-                    MAKETILE( Cap2,  Blank, T8 )
-                    MAKETILE( BlankMask, Mask0, T9 )
-                    MAKETILE( Mask0, Mask1, T10)
-                    MAKETILE( Mask1, Mask2, T11)
-                    MAKETILE( Mask2, BlankMask, T12)
-                    MAKEMASK( T0, T9, T13 )
-                    MAKEMASK( T1, T10, T14 )
-                    MAKEMASK( T2, T11, T15 )
-                    MAKEMASK( T4, T12, T16 )
+MakeTiles           MAKETILE( Blank,  Stem0, eStem0 )
+                    MAKETILE( Stem0,  Stem1, eStem1 )
+                    MAKETILE( Stem1,  Stem2, eStem2 )
+                    MAKETILE( Stem2,  Blank, eStem3 )
+                    MAKETILE( Blank, Blank, eBlank )
+                    MAKETILE( Blank,  Cap0, eCap0 )
+                    MAKETILE( Cap0,  Cap1, eCap1 )
+                    MAKETILE( Cap1,  Cap2, eCap2 )
+                    MAKETILE( Cap2,  Blank, eCap3 )
+                    MAKETILE( BlankMask, Mask0, eMask0 )
+                    MAKETILE( Mask0, Mask1, eMask1)
+                    MAKETILE( Mask1, Mask2, eMask2)
+                    MAKETILE( Mask2, BlankMask, eMask3)
+                    MAKEMASK( eStem0, eMask0, eMasked0 )
+                    MAKEMASK( eStem1, eMask1, eMasked1 )
+                    MAKEMASK( eStem2, eMask2, eMasked2 )
+                    MAKEMASK( eStem3, eMask3, eMasked3 )
 
                     ld ix, Pipes
 pipeloop            ld a, (ix+0 )
@@ -753,17 +741,14 @@ DrawSprite          ld hl, (Ypos )
                     ld a, h
                     and 7
                     srl h
-                 ;   rr  l
                     srl h
-                  ;  rr  l
                     srl h
-                   ; rr  l
                     ld b,h
                     inc b
                     dec b
                     ld hl, DisplayList+4
                     add hl, de
-                    ld de, 256 ;NumCols*4+4
+                    ld de, 256 
                     jr z  skipmul
 mulloop             inc h
                     djnz mulloop
