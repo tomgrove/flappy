@@ -52,17 +52,17 @@ MAKEDL              macro()
                     Row = 0
                     repeat 
                         align 256
-                        defw SetScreen
+                        defw SetScreenCmd
                         SCRADD( Row + RowOffset )
                         loop NumCols
-                            defw BlankCell
+                            defw BlankCellCmd
                             defw $0000
                         lend
-                        defw NextRow
+                        defw NextRowCmd
                         Row = Row + 1
                     until Row >= NumRows
                     align 256
-                    defw StackSave
+                    defw EndDlCmd
                     mend
 
 EXPTILE             macro()
@@ -312,33 +312,32 @@ eMasked3            EXPTILE()
 eBlank              EXPTILE()
                
 
-
-MT0                 defw VRepeat
+Stem0Op             defw VRepeatCmd
                     defw eStem0
-MT1                 defw VRepeat
+Stem1Op             defw VRepeatCmd
                     defw eStem1
-MT2                 defw VRepeat
+Stem2Op             defw VRepeatCmd
                     defw eStem2
-MT3                 defw BlankCell
+BlankOp             defw BlankCellCmd
                     defw eBlank
-MT4                 defw VRepeat
+Stem3Op             defw VRepeatCmd
                     defw eStem3
-MT5                 defw OneCell
+Cap0Op              defw OneCellCmd
                     defw eCap0
-MT6                 defw OneCell
+Cap1Op              defw OneCellCmd
                     defw eCap1
-MT7                 defw OneCell
+Cap2Op              defw OneCellCmd
                     defw eCap2
-MT8                 defw OneCell
+Cap3Op              defw OneCellCmd
                     defw eCap3
                     
-MT9                 defw VRepeatMask
+Masked0Op           defw VRepeatMaskCmd
                     defw eMasked0
-MT10                defw VRepeatMask
+Masked1Op           defw VRepeatMaskCmd
                     defw eMasked1
-MT11                defw VRepeatMask
+Masked2Op           defw VRepeatMaskCmd
                     defw eMasked2
-MT12                defw VRepeatMask
+Masked3Op           defw VRepeatMaskCmd
                     defw eMasked3
                   
                     align 8
@@ -346,7 +345,7 @@ MT12                defw VRepeatMask
 TILEMAP             macro()
                     loop NumRows
                         loop TileMapWidth
-                            defw BlankCell
+                            defw BlankCellCmd
                             defw eBlank
                         lend
                     lend
@@ -378,7 +377,7 @@ CELL                macro()
                     mend
         
 
-OneCell             pop ix
+OneCellCmd          pop ix
                     ld (ss+1),sp
                     ld sp, ix
                     CELL()
@@ -386,7 +385,7 @@ OneCell             pop ix
 ss                  ld sp, $0000
                     ret
 
-BlankCell           pop bc
+BlankCellCmd        pop bc
                     inc l
                     ret
 
@@ -395,7 +394,7 @@ FILLE               macro()
                     inc h
                     mend
 
-VRepeat             pop bc
+VRepeatCmd          pop bc
                     ld a, (bc)
                     ld d, h
                     loop 7
@@ -415,7 +414,7 @@ FILLD               macro()
                     mend
 
 
-VRepeatMask         pop bc
+VRepeatMaskCmd      pop bc
                     ld a, (bc)
                     ld e, a
                     inc bc
@@ -435,7 +434,7 @@ VRepeatMask         pop bc
 
 StackSave4          defw $0000
 
-NextRow             ld ( StackSave4 ), sp
+NextRowCmd          ld ( StackSave4 ), sp
                     ld de, (StackSave4)
                     ld e, 0
                     inc d
@@ -443,15 +442,16 @@ NextRow             ld ( StackSave4 ), sp
                     ld sp, ix
                     ret
 
-SetScreen           pop hl
+SetScreenCmd        pop hl
                     ret
 
 
-DrawTiles           ld (StackSave+1), sp
+DrawTiles           ld (EndDlCmd+1), sp
                     ld hl, DisplayList
                     ld sp, hl
                     ret
-StackSave           ld sp, $0000
+
+EndDlCmd            ld sp, $0000
                     ret  
 
 MakeTile            ld b, 8
@@ -531,23 +531,23 @@ WRITETILE           macro( TilePtr )
                     mend
 
 
-MakeCap             WRITETILE(MT5)
-                    WRITETILE(MT6)
-                    WRITETILE(MT7)
-                    WRITETILE(MT8)
+MakeCap             WRITETILE(Cap0Op)
+                    WRITETILE(Cap1Op)
+                    WRITETILE(Cap2Op)
+                    WRITETILE(Cap3Op)
                     ret
 
-MakeStem            WRITETILE(MT0)
-                    WRITETILE(MT1)
-                    WRITETILE(MT2)
-                    WRITETILE(MT4)
+MakeStem            WRITETILE(Stem0Op)
+                    WRITETILE(Stem1Op)
+                    WRITETILE(Stem2Op)
+                    WRITETILE(Stem3Op)
                     ret
 
 
-MakeStemMasked      WRITETILE(MT9)
-                    WRITETILE(MT10)
-                    WRITETILE(MT11)
-                    WRITETILE(MT12)
+MakeStemMasked      WRITETILE(Masked0Op)
+                    WRITETILE(Masked1Op)
+                    WRITETILE(Masked2Op)
+                    WRITETILE(Masked3Op)
                     ret
 
 
@@ -697,9 +697,9 @@ CSETCELL            macro(X)
                     xor (((X)>>8)&$ff)
                     jr nz skipcell
                     dec hl
-docell              ld (hl), ((OneCell) & $ff) 
+docell              ld (hl), ((OneCellCmd) & $ff) 
                     inc hl
-                    ld (hl), (((OneCell)>>8) & $ff)
+                    ld (hl), (((OneCellCmd)>>8) & $ff)
                     inc hl
                     ld (hl), c
                     inc hl
@@ -710,9 +710,9 @@ skipcell            dec hl
                     mend
 
 SETCELL             macro()
-                    ld (hl), ((OneCell) & $ff) 
+                    ld (hl), ((OneCellCmd) & $ff) 
                     inc hl
-                    ld (hl), (((OneCell)>>8) & $ff)
+                    ld (hl), (((OneCellCmd)>>8) & $ff)
                     inc hl
                     ld (hl), c
                     inc hl
@@ -723,13 +723,13 @@ SETCELL             macro()
                     mend
 
 
-OneCol              CSETCELL(BlankCell)
+OneCol              CSETCELL(BlankCellCmd)
                     NEXTCELL()
                     add hl, de
-                    CSETCELL(BlankCell)
+                    CSETCELL(BlankCellCmd)
                     NEXTCELL()
                     add hl, de
-                    CSETCELL(BlankCell)
+                    CSETCELL(BlankCellCmd)
                     ret
 
 DrawSprite          ld hl, (Ypos )
@@ -959,28 +959,18 @@ Collision0          add hl, de
                     pop de
                     add hl, de
                     ld a, (hl)
-                    cp (BlankCell&$ff)
+                    cp (BlankCellCmd&$ff)
                     jr nz Collision1
                     inc hl
                     ld a,(hl)
-                    cp ((BlankCell>>8)&$ff)
-                    jr nz Collision2
+                    cp ((BlankCellCmd>>8)&$ff)
+                    jr nz Collision1
                     scf
                     ccf
-                    ret
-Collision2          nop ;dec hl
-Collision1          nop ;ld a, (BlankCell&$ff)
-                    ;ld ( hl ),a
-                    ;inc hl
-                    ;ld a, ((BlankCell>>8)&$ff)
-                    ;ld ( hl),a 
-                    ld a, 7
-                    out ($fe), a
-                    scf
+                    ret 
+Collision1          scf
                     ret 
                
-
-
 
 Animate             ld h, 0
                     ld a, (FrameIndex )
@@ -996,12 +986,13 @@ Animate             ld h, 0
                     ld a, (Yvel+1)
                     and $80
                     ret z
+        
                     ld a, (FrameIndex )
                     inc a
                     cp 3
-                    jr nz  SetIndex
+                    jr nz  Animate0
                     ld a, 0
-SetIndex            ld ( FrameIndex ), a
+Animate0            ld ( FrameIndex ), a
                     ret
 
 ClearScreen         ld a,0
@@ -1021,7 +1012,7 @@ Colours             db $68, $68 , $68 ,$68 , $68, $68, $68, $68
 SetAttributes       ld hl, $5800 + ColOffset + 32 * RowOffset
                     ld ix, Colours
                     ld b, NumRows + 1
-l7                  push bc
+SetAttributes0      push bc
                     ld a, (ix+0)
                     ld ( hl ), a
                     ld bc, NumCols - 1
@@ -1032,7 +1023,7 @@ l7                  push bc
                     add hl, de
                     inc ix
                     pop bc
-                    djnz l7
+                    djnz SetAttributes0
                     ret
 
 
@@ -1057,15 +1048,14 @@ Ground              dg XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
                     dg ________ ________ ________ ________ ________ ________
                     dg XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX XXXXXXXX
 
-                    db $0
 
 ScrollGround        ld b,8 
                     ld hl, Ground + 6*8 - 1
-                    jp ScrollVista1
+                    jp ScrollVista0
 
 ScrollVista         ld b,8
                     ld hl, Vista + 6*8 - 1
- ScrollVista1       ld de, hl
+ ScrollVista0       ld de, hl
                     scf
                     ccf
                     rl (hl)
@@ -1086,7 +1076,7 @@ ScrollVista         ld b,8
                      or (hl)
                     ld (hl),a
                     ex de,hl
-                    djnz ScrollVista1
+                    djnz ScrollVista0
                     ret                     
 
 DrawGround          ld ix, $50C0 + ColOffset + NumCols
