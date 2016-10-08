@@ -1,4 +1,7 @@
 # flappy
+
+![Flappy Bird!](/flappy.gif)
+
 A zx spectrum horizontal scrolling demo in the style of flappy bird.
 
 Somes notes:
