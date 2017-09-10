@@ -4,7 +4,7 @@
 
 A zx spectrum horizontal scrolling demo in the style of flappy bird.
 
-Somes notes:
+Notes:
 
 The basic approach to scrolling is the same as Uridium ( http://zxspectrumgames.blogspot.co.uk/2009/07/zx-spectrum-game-uridium-zx-spectrum.html ) a spectrum game ported from the C64. At the time  ( and subsequently, by the lonely souls who still care about such things ) it was held up as an impressive technical feat. This was because the spectrum has no hardware support for scrolling and sprites so all rendering has to be accomplished in software against very tight timing constraints.
 

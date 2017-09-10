@@ -1055,7 +1055,7 @@ ScrollGround        ld b,8
 
 ScrollVista         ld b,8
                     ld hl, Vista + 6*8 - 1
- ScrollVista0       ld de, hl
+ScrollVista0        ld de, hl
                     scf
                     ccf
                     rl (hl)
@@ -1103,6 +1103,46 @@ PushScroller        ld (ss0+1), sp
                     lend
 ss0                 ld sp, 0 
                     ret
+
+ApplyAttribute      ld a, (Ypos+1)
+                    ld l, a
+                    srl l
+                    srl l
+                    srl l
+                    ld a, RowOffset
+                    add l
+                    ld l,a
+                    ld h,0
+                    sla l
+                    rl h
+                    sla l
+                    rl h
+                    sla l
+                    rl h
+                    sla l
+                    rl h
+                    sla l
+                    rl h
+                    ld a, (Xpos)
+                    add ColOffset
+                    or l
+                    ld l,a
+                    ld a, $58
+                    add h
+                    ld de, $1f
+                    ld h, a
+                    ld (hl ), b
+                    inc l
+                    ld (hl ), b
+                    add hl, de
+                    ld (hl ), b
+                    inc l
+                    ld (hl ), b
+                    add hl, de
+                    ld (hl ), b
+                    inc l
+                    ld (hl ), b
+                    ret 
 
 Reset               call ClearScreen
                     call SetAttributes
@@ -1163,7 +1203,9 @@ Next                ld (Offset), hl
                   ;  out ($fe), a
                     call DrawGround
                    ; ld a, 4
-                   ; out ($fe), a 
+                   ; out ($fe), a
+                  ;  ld b, $6E
+                   ; call ApplyAttribute 
                     pop hl
                     pop bc
                     inc hl
